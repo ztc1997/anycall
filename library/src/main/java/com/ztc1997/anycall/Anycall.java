@@ -134,51 +134,55 @@ public class Anycall {
     }
 
     public void callMethod(final String className, final String serviceName,
-                           final String methodName, final CallMethodResultListener listener,
-                           Object... params) {
+                           final String methodName, final Object... paramsAndListener) {
         Parcel data = Parcel.obtain();
         data.writeInterfaceToken("android.os.IPowerManager");
-        for (Object o : params) {
-            if (o instanceof Byte)
-                data.writeByte((Byte) o);
-            else if (o instanceof Integer)
-                data.writeLong((Integer) o);
-            else if (o instanceof Long)
-                data.writeLong((Long) o);
-            else if (o instanceof String)
-                data.writeString((String) o);
-            else if (o instanceof Bundle)
-                data.writeBundle((Bundle) o);
-            else if (o instanceof Float)
-                data.writeFloat((Float) o);
-            else if (o instanceof FileDescriptor)
-                data.writeFileDescriptor((FileDescriptor) o);
-            else if (o instanceof List)
-                data.writeList((List) o);
-            else if (o instanceof Exception)
-                data.writeException((Exception) o);
-            else if (o instanceof IBinder)
-                data.writeStrongBinder((IBinder) o);
-            else if (o instanceof Double)
-                data.writeDouble((Double) o);
-            else if (o instanceof Map)
-                data.writeMap((Map) o);
-            else if (o instanceof boolean[])
-                data.writeBooleanArray((boolean[]) o);
-            else if (o instanceof byte[])
-                data.writeByteArray((byte[]) o);
-            else if (o instanceof char[])
-                data.writeCharArray((char[]) o);
-            else if (o instanceof int[])
-                data.writeIntArray((int[]) o);
-            else if (o instanceof IBinder[])
-                data.writeBinderArray((IBinder[]) o);
-            else if (o instanceof double[])
-                data.writeDoubleArray((double[]) o);
-            else if (o instanceof Object[])
-                data.writeArray((Object[]) o);
-            else data.writeValue(o);
+        for (int i = 0; i < paramsAndListener.length - 1; i++) {
+            Object p = paramsAndListener[i];
+            if (p instanceof Byte)
+                data.writeByte((Byte) p);
+            else if (p instanceof Integer)
+                data.writeLong((Integer) p);
+            else if (p instanceof Long)
+                data.writeLong((Long) p);
+            else if (p instanceof String)
+                data.writeString((String) p);
+            else if (p instanceof Bundle)
+                data.writeBundle((Bundle) p);
+            else if (p instanceof Float)
+                data.writeFloat((Float) p);
+            else if (p instanceof FileDescriptor)
+                data.writeFileDescriptor((FileDescriptor) p);
+            else if (p instanceof List)
+                data.writeList((List) p);
+            else if (p instanceof Exception)
+                data.writeException((Exception) p);
+            else if (p instanceof IBinder)
+                data.writeStrongBinder((IBinder) p);
+            else if (p instanceof Double)
+                data.writeDouble((Double) p);
+            else if (p instanceof Map)
+                data.writeMap((Map) p);
+            else if (p instanceof boolean[])
+                data.writeBooleanArray((boolean[]) p);
+            else if (p instanceof byte[])
+                data.writeByteArray((byte[]) p);
+            else if (p instanceof char[])
+                data.writeCharArray((char[]) p);
+            else if (p instanceof int[])
+                data.writeIntArray((int[]) p);
+            else if (p instanceof IBinder[])
+                data.writeBinderArray((IBinder[]) p);
+            else if (p instanceof double[])
+                data.writeDoubleArray((double[]) p);
+            else if (p instanceof Object[])
+                data.writeArray((Object[]) p);
+            else data.writeValue(p);
         }
+
+        Object lastParam = paramsAndListener[paramsAndListener.length - 1];
+        CallMethodResultListener listener = lastParam == null ? null : (CallMethodResultListener) lastParam;
+
         callMethod(className, serviceName, methodName, data, listener);
         data.recycle();
     }

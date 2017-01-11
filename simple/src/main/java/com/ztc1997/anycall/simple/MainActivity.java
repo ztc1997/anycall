@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 anycall.callMethod("android.os.IPowerManager", POWER_SERVICE, "goToSleep",
-                        new Anycall.CallMethodResultListener() {
+                        SystemClock.uptimeMillis(), new Anycall.CallMethodResultListener() {
                             @Override
                             public void onResult(int resultCode, Parcel reply) {
                                 output.append("Go to sleep resultCode = " + resultCode + "\n");
@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
                                     e.printStackTrace();
                                 }
                             }
-                        }, SystemClock.uptimeMillis());
+                        });
             }
         });
     }
