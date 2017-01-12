@@ -43,10 +43,27 @@ import eu.chainfire.libsuperuser.Shell;
 public class Anycall {
     public static final String TAG = Anycall.class.getSimpleName();
 
+    private static final int FIRST_ERROR_CODE = 64;
+
+    /**
+     * Failed to obtain the transaction code via reflect.
+     */
     public static final int ERROR_CANNOT_OBTAIN_TRANSACTION_CODE = -1;
-    public static final int ERROR_NO_SERVICE_NAME = 1;
-    public static final int ERROR_FAILED_TO_GET_SERVICE_MANAGER = 2;
-    public static final int ERROR_FAILED_TO_GET_SERVICE = 3;
+
+    /**
+     * The command is missing parameters.
+     */
+    public static final int ERROR_MISSING_PARAMETERS = FIRST_ERROR_CODE;
+
+    /**
+     * Failed to get service manager.
+     */
+    public static final int ERROR_FAILED_TO_GET_SERVICE_MANAGER = FIRST_ERROR_CODE + 1;
+
+    /**
+     * Failed to get service, the service may not be running.
+     */
+    public static final int ERROR_FAILED_TO_GET_SERVICE = FIRST_ERROR_CODE + 2;
 
     private LruCache<String, Integer> cache = new LruCache<String, Integer>(1024 * Integer.SIZE) {
         @Override
@@ -66,9 +83,9 @@ public class Anycall {
         copyFileIfNotExist(ctx.getAssets());
     }
 
-    public synchronized boolean startShell(@Nullable final StartShellListener listener) {
+    public void startShell(@Nullable final StartShellListener listener) {
         if (rootSession != null && rootSession.isRunning()) {
-            return true;
+            if (listener != null) listener.onFinish(true);
         }
 
         rootSession = new Shell.Builder()
@@ -90,12 +107,13 @@ public class Anycall {
                         }
                     }
                 });
-
-        return false;
     }
 
-    public synchronized void stopShell() {
-        rootSession.close();
+    public void stopShell() {
+        if (rootSession != null) {
+            rootSession.close();
+            rootSession = null;
+        }
     }
 
     public void callMethod(final String className, final String serviceName,
@@ -126,8 +144,8 @@ public class Anycall {
                         byte[] replyRaw = Base64.decode(replyBase64, Base64.NO_WRAP);
                         reply.unmarshall(replyRaw, 0, replyRaw.length);
                     }
-                    listener.onResult(exitCode, reply);
-                    reply.recycle();
+                    boolean shouldRecycle = listener.onResult(exitCode, reply);
+                    if (shouldRecycle) reply.recycle();
                 }
             }
         });
@@ -136,7 +154,7 @@ public class Anycall {
     public void callMethod(final String className, final String serviceName,
                            final String methodName, final Object... paramsAndListener) {
         Parcel data = Parcel.obtain();
-        data.writeInterfaceToken("android.os.IPowerManager");
+        data.writeInterfaceToken(className);
         for (int i = 0; i < paramsAndListener.length - 1; i++) {
             Object p = paramsAndListener[i];
             if (p instanceof Byte)
@@ -181,7 +199,8 @@ public class Anycall {
         }
 
         Object lastParam = paramsAndListener[paramsAndListener.length - 1];
-        CallMethodResultListener listener = lastParam == null ? null : (CallMethodResultListener) lastParam;
+        CallMethodResultListener listener = lastParam == null ? null :
+                (CallMethodResultListener) lastParam;
 
         callMethod(className, serviceName, methodName, data, listener);
         data.recycle();
@@ -236,6 +255,16 @@ public class Anycall {
     }
 
     public interface CallMethodResultListener {
-        void onResult(int resultCode, Parcel reply);
+
+        /**
+         * @param resultCode Equals 0 when success, or indicates an error
+         * @param reply      The parcel reply from the service, may contains exceptions and return values
+         * @return Auto recycle reply parcel if true.
+         * @see #ERROR_CANNOT_OBTAIN_TRANSACTION_CODE
+         * @see #ERROR_MISSING_PARAMETERS
+         * @see #ERROR_FAILED_TO_GET_SERVICE_MANAGER
+         * @see #ERROR_FAILED_TO_GET_SERVICE
+         */
+        boolean onResult(int resultCode, Parcel reply);
     }
 }

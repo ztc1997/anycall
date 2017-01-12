@@ -45,12 +45,12 @@ public class MainActivity extends AppCompatActivity {
         final TextView output = (TextView) findViewById(R.id.output);
 
         anycall = new Anycall(this);
-        Log.i(TAG, "startShell() = " + anycall.startShell(new Anycall.StartShellListener() {
+        anycall.startShell(new Anycall.StartShellListener() {
             @Override
             public void onFinish(boolean success) {
                 output.append("Start shell success = " + success + "\n");
             }
-        }));
+        });
 
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
                 anycall.callMethod("android.os.IPowerManager", POWER_SERVICE, "goToSleep",
                         SystemClock.uptimeMillis(), new Anycall.CallMethodResultListener() {
                             @Override
-                            public void onResult(int resultCode, Parcel reply) {
+                            public boolean onResult(int resultCode, Parcel reply) {
                                 output.append("Go to sleep resultCode = " + resultCode + "\n");
                                 Log.d(TAG, "resultCode = " + resultCode);
                                 try {
@@ -66,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
+                                return true;
                             }
                         });
             }
