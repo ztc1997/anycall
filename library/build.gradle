@@ -16,6 +16,8 @@
  */
 
 apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
 
 android {
     compileSdkVersion Integer.parseInt("$compileSdkVer")
@@ -24,8 +26,8 @@ android {
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion Integer.parseInt("$targetSdkVer")
-        versionCode 1
-        versionName "1.0"
+        versionCode Integer.parseInt("$verCode")
+        versionName "$verName"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -47,4 +49,72 @@ dependencies {
 
     compile "com.android.support:support-annotations:$supportLibVersion"
     compile 'eu.chainfire:libsuperuser:1.0.0.201608240809'
+}
+
+version = "$verName"
+def siteUrl = 'https://github.com/ztc1997/anycall'
+def gitUrl = 'https://github.com/ztc1997/anycall.git'
+group = "com.ztc1997.anycall"
+install {
+    repositories.mavenInstaller {
+        // This generates POM.xml with proper parameters
+        pom {
+            project {
+                packaging 'aar'
+                // Add your description here
+                name 'Call system service RPC from normal apps (ROOT)'
+                url siteUrl
+                // Set your license
+                licenses {
+                    license {
+                        name 'GNU GENERAL PUBLIC LICENSE, Version 3'
+                        url 'https://www.gnu.org/licenses/gpl-3.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id 'ztc1997'
+                        name 'Alex Zhang'
+                        email 'ztc2011@gmail.com'
+                    }
+                }
+                scm {
+                    connection gitUrl
+                    developerConnection gitUrl
+                    url siteUrl
+                }
+            }
+        }
+    }
+}
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+bintray {
+    user = properties.getProperty("bintray.user")
+    key = properties.getProperty("bintray.apikey")
+    configurations = ['archives']
+    pkg {
+        repo = "maven"
+        name = "anycall"
+        websiteUrl = siteUrl
+        vcsUrl = gitUrl
+        licenses = ["GPL-3.0"]
+        publish = true
+    }
 }

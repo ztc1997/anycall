@@ -25,8 +25,8 @@ android {
         applicationId "com.ztc1997.anycall.simple"
         minSdkVersion 15
         targetSdkVersion Integer.parseInt("$targetSdkVer")
-        versionCode 1
-        versionName "1.0"
+        versionCode Integer.parseInt("$verCode")
+        versionName "$verName"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
