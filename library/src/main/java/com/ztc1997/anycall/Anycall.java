@@ -83,8 +83,12 @@ public class Anycall {
         copyFileIfNotExist(ctx.getAssets());
     }
 
+    public boolean isRunning() {
+        return rootSession != null && rootSession.isRunning();
+    }
+
     public void startShell(@Nullable final StartShellListener listener) {
-        if (rootSession != null && rootSession.isRunning()) {
+        if (isRunning()) {
             if (listener != null) listener.onFinish(true);
         }
 
