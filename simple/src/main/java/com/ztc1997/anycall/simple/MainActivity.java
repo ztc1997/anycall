@@ -18,6 +18,8 @@
 package com.ztc1997.anycall.simple;
 
 import android.annotation.TargetApi;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcel;
@@ -29,6 +31,9 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.ztc1997.anycall.Anycall;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     public static final String TAG = MainActivity.class.getSimpleName();
@@ -42,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         final AppCompatButton btn = (AppCompatButton) findViewById(R.id.btn_go_to_sleep);
+        final AppCompatButton getOps = (AppCompatButton) findViewById(R.id.get_ops);
         final TextView output = (TextView) findViewById(R.id.output);
 
         anycall = new Anycall(this);
@@ -66,6 +72,43 @@ public class MainActivity extends AppCompatActivity {
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
+                                return true;
+                            }
+                        });
+            }
+        });
+
+        getOps.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final String pkgName = "com.android.chrome";
+
+                PackageManager pm = getPackageManager();
+                ApplicationInfo ai = null;
+                try {
+                    ai = pm.getApplicationInfo(pkgName, 0);
+                } catch (PackageManager.NameNotFoundException e) {
+                    e.printStackTrace();
+                }
+
+                assert ai != null;
+
+                anycall.callMethod("com.android.internal.app.IAppOpsService", APP_OPS_SERVICE,
+                        "getOpsForPackage", ai.uid, pkgName, -1/* -1 means null array*/,
+                        new Anycall.CallMethodResultListener() {
+                            @Override
+                            public boolean onResult(int resultCode, Parcel reply) {
+                                output.append("Get ops for me resultCode = " + resultCode + "\n");
+                                Log.d(TAG, "resultCode = " + resultCode);
+                                try {
+                                    reply.readException();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                                List<AppOpsManagerBeans.PackageOps> list =
+                                        reply.createTypedArrayList(AppOpsManagerBeans.PackageOps.CREATOR);
+                                output.append("Get ops for me ret = " +
+                                        Arrays.toString(list.get(0).getOps().toArray()) + "\n");
                                 return true;
                             }
                         });

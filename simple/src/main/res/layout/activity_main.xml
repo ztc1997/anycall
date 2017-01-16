@@ -33,8 +33,20 @@
         android:layout_height="wrap_content"
         android:text="@string/btn_go_to_sleep" />
 
-    <TextView
-        android:id="@+id/output"
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/get_ops"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="Get app ops for Chrome" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1.0">
+
+        <TextView
+            android:id="@+id/output"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </ScrollView>
 </LinearLayout>
