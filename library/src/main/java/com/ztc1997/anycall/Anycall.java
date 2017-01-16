@@ -164,7 +164,7 @@ public class Anycall {
             if (p instanceof Byte)
                 data.writeByte((Byte) p);
             else if (p instanceof Integer)
-                data.writeLong((Integer) p);
+                data.writeInt((Integer) p);
             else if (p instanceof Long)
                 data.writeLong((Long) p);
             else if (p instanceof String)
