@@ -151,8 +151,10 @@ public class Anycall {
                     Parcel reply = Parcel.obtain();
                     if (exitCode == 0) {
                         String replyBase64 = output.get(0);
+                        Log.d(TAG, replyBase64);
                         byte[] replyRaw = Base64.decode(replyBase64, Base64.NO_WRAP);
                         reply.unmarshall(replyRaw, 0, replyRaw.length);
+                        reply.setDataPosition(0);
                     }
                     boolean shouldRecycle = listener.onResult(exitCode, reply);
                     if (shouldRecycle) reply.recycle();
