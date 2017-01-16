@@ -219,8 +219,8 @@ public class Anycall {
         if (value != null) return value;
 
         try {
-            final Class<?> cls = Class.forName("android.os.IPowerManager$Stub");
-            final Field declaredField = cls.getDeclaredField("TRANSACTION_goToSleep");
+            final Class<?> cls = Class.forName(stubName);
+            final Field declaredField = cls.getDeclaredField(fieldName);
             declaredField.setAccessible(true);
             value = declaredField.getInt(cls);
 
