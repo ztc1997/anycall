@@ -65,12 +65,7 @@ public class Anycall {
      */
     public static final int ERROR_FAILED_TO_GET_SERVICE = FIRST_ERROR_CODE + 2;
 
-    private LruCache<String, Integer> cache = new LruCache<String, Integer>(1024 * Integer.SIZE) {
-        @Override
-        protected int sizeOf(String key, Integer value) {
-            return Integer.SIZE;
-        }
-    };
+    private LruCache<String, Integer> cache;
 
     private File binaryFile;
 
@@ -79,8 +74,19 @@ public class Anycall {
     private int commandCount = 1;
 
     public Anycall(@NonNull final Context ctx) {
+        this(ctx, 1024);
+    }
+
+    public Anycall(@NonNull final Context ctx, final int cacheSize) {
         binaryFile = new File(ctx.getFilesDir(), "anycall");
         copyFileIfNotExist(ctx.getAssets());
+
+        cache = new LruCache<String, Integer>(cacheSize) {
+            @Override
+            protected int sizeOf(String key, Integer value) {
+                return Integer.SIZE;
+            }
+        };
     }
 
     public boolean isRunning() {
