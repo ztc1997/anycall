@@ -19,6 +19,7 @@ package com.ztc1997.anycall;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcel;
@@ -257,9 +258,16 @@ public class Anycall {
     }
 
     private boolean copyFileIfNotExist(final AssetManager am) {
-        return binaryFile.exists() ||
-                AssetUtil.copyAssets(am, BuildCompat.chooseAbi() + "/anycall",
-                        binaryFile.getAbsolutePath());
+        String api;
+        if (Build.VERSION.SDK_INT >= 23)
+            api = "sdk23-25";
+        else if (Build.VERSION.SDK_INT >= 19)
+            api = "sdk19-22";
+        else
+            throw new IllegalStateException("Unsupported SDK version " + Build.VERSION.SDK_INT);
+        String assetsPath = "anycall/" + api + "/" + BuildCompat.chooseAbi() + "/anycall";
+
+        return AssetUtil.compareAndCopyAssets(am, assetsPath, binaryFile.getAbsolutePath());
     }
 
     public interface StartShellListener {
