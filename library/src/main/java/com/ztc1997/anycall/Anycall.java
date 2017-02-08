@@ -149,16 +149,24 @@ public class Anycall {
                     Log.d(TAG, "commandCode = " + commandCode + ", exitCode = " + exitCode + ", output = " + output);
 
                 if (listener != null) {
-                    Parcel reply = Parcel.obtain();
                     if (exitCode == 0) {
-                        String replyBase64 = output.get(0);
+                        StringBuilder encoded = new StringBuilder();
+                        for (String s : output) {
+                            encoded.append(s);
+                        }
+
+                        String replyBase64 = encoded.toString();
                         Log.d(TAG, replyBase64);
                         byte[] replyRaw = Base64.decode(replyBase64, Base64.NO_WRAP);
+
+                        Parcel reply = Parcel.obtain();
                         reply.unmarshall(replyRaw, 0, replyRaw.length);
                         reply.setDataPosition(0);
+                        boolean shouldRecycle = listener.onResult(exitCode, reply);
+                        if (shouldRecycle) reply.recycle();
+                    } else {
+                        listener.onResult(exitCode, null);
                     }
-                    boolean shouldRecycle = listener.onResult(exitCode, reply);
-                    if (shouldRecycle) reply.recycle();
                 }
             }
         });
@@ -285,6 +293,6 @@ public class Anycall {
          * @see #ERROR_FAILED_TO_GET_SERVICE_MANAGER
          * @see #ERROR_FAILED_TO_GET_SERVICE
          */
-        boolean onResult(int resultCode, Parcel reply);
+        boolean onResult(int resultCode, @Nullable Parcel reply);
     }
 }
