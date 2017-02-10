@@ -23,6 +23,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcel;
+import android.os.Parcelable;
 import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatButton;
@@ -32,7 +33,9 @@ import android.widget.TextView;
 
 import com.ztc1997.anycall.Anycall;
 
-import java.util.Arrays;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -94,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
                 assert ai != null;
 
                 anycall.callMethod("com.android.internal.app.IAppOpsService", APP_OPS_SERVICE,
-                        "getOpsForPackage", ai.uid, pkgName, -1/* -1 means null array*/,
+                        "getOpsForPackage", ai.uid, pkgName, -1/* -1 means null array */,
                         new Anycall.CallMethodResultListener() {
                             @Override
                             public boolean onResult(int resultCode, Parcel reply) {
@@ -105,10 +108,47 @@ public class MainActivity extends AppCompatActivity {
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
-                                List<AppOpsManagerBeans.PackageOps> list =
-                                        reply.createTypedArrayList(AppOpsManagerBeans.PackageOps.CREATOR);
-                                output.append("Get ops for me ret = " +
-                                        Arrays.toString(list.get(0).getOps().toArray()) + "\n");
+
+                                //noinspection TryWithIdenticalCatches
+                                try {
+                                    Class<?> clazz = Class.forName("android.app.AppOpsManager$PackageOps");
+                                    Field field = clazz.getField("CREATOR");
+                                    field.setAccessible(true);
+                                    Parcelable.Creator<?> creator = (Parcelable.Creator<?>) field.get(clazz);
+
+                                    List<?> list =
+                                            reply.createTypedArrayList(creator);
+
+                                    Object pops = list.get(0);
+                                    Method getOps = clazz.getMethod("getOps");
+                                    List<?> ops = (List<?>) getOps.invoke(pops);
+
+                                    StringBuilder ret = new StringBuilder();
+                                    for (Object o : ops) {
+                                        Class<?> clazz1 = o.getClass();
+                                        Method getOp = clazz1.getMethod("getOp");
+                                        Object op = getOp.invoke(o);
+
+                                        Method getMode = clazz1.getMethod("getMode");
+                                        Object mode = getMode.invoke(o);
+
+                                        ret.append("op = ").append(op).append(", mode = ")
+                                                .append(mode).append('\n');
+                                    }
+
+                                    output.append("Get ops for me ret = " +
+                                            ret + "\n");
+                                } catch (ClassNotFoundException e) {
+                                    e.printStackTrace();
+                                } catch (NoSuchFieldException e) {
+                                    e.printStackTrace();
+                                } catch (IllegalAccessException e) {
+                                    e.printStackTrace();
+                                } catch (NoSuchMethodException e) {
+                                    e.printStackTrace();
+                                } catch (InvocationTargetException e) {
+                                    e.printStackTrace();
+                                }
                                 return true;
                             }
                         });
