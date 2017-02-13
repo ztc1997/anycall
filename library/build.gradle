@@ -40,6 +40,24 @@ android {
     }
 
     publishNonDefault true
+
+    defaultPublishConfig 'release'
+
+    // Fix for defaultPublishConfig not working as expected
+    // ref: https://github.com/dcendents/android-maven-gradle-plugin/issues/11
+    libraryVariants.all { variant ->
+        if (publishNonDefault && variant.name == defaultPublishConfig) {
+            def bundleTask = tasks["bundle${variant.name.capitalize()}"]
+            artifacts {
+                archives(bundleTask.archivePath) {
+                    classifier null //necessary to get rid of the suffix in the artifact
+                    builtBy bundleTask
+                    name name.replace('-' + variant.name, '')
+//necessary to get rid of the suffix from the folder name
+                }
+            }
+        }
+    }
 }
 
 dependencies {
